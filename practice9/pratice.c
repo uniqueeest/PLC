@@ -36,5 +36,13 @@ int main()
   swap(&a, &b);
   printf("a = %d, b = %d\n", a, b);
 
+  /* 4번 */
+  int data = 0x12345678, i;
+  char *p = (char *)&data;
+  for (i = 0; i < sizeof(data); i++)
+  {
+    printf("%X, ", *(p + i));
+  }
+
   return 0;
 }
