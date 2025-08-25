@@ -2,8 +2,10 @@ package user
 
 import (
 	"fmt"
+	"os"
 	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
 )
 
@@ -128,4 +130,60 @@ func (s *Service) DeleteUser(id string) (DeleteUserResponse, error) {
 	}
 
 	return DeleteUserResponse{}, fmt.Errorf("user not found")
+}
+
+// ValidateUser 이메일과 비밀번호로 사용자 검증
+func (s *Service) ValidateUser(email, password string) (*UserResponse, error) {
+	users, err := s.repo.LoadUsers()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, user := range users {
+		if user.Email == email && user.Password == password {
+			return &UserResponse{
+				ID: user.ID,
+				Name: user.Name,
+				Gender: user.Gender,
+				Age: user.Age,
+				Email: user.Email,
+			}, nil
+		}
+	}
+
+	return nil, fmt.Errorf("invalid email or password")
+}
+
+func CreateToken(userid string) (string, error) {
+  var err error
+  //Creating Access Token
+  os.Setenv("ACCESS_SECRET", "jwt-secret")
+  atClaims := jwt.MapClaims{}
+  atClaims["authorized"] = true
+  atClaims["user_id"] = userid
+  atClaims["exp"] = time.Now().Add(time.Minute * 15).Unix()
+  at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
+  token, err := at.SignedString([]byte(os.Getenv("ACCESS_SECRET")))
+  if err != nil {
+     return "", err
+  }
+  return token, nil
+}
+
+func (s *Service) Login(req LoginRequest) (LoginResponse, error) {
+	user, err := s.ValidateUser(req.Email, req.Password)
+	if err != nil {
+		return LoginResponse{}, err
+	}
+
+	token, err := CreateToken(user.ID)
+	if err != nil {
+		return LoginResponse{}, err
+	}
+
+	return LoginResponse{
+		Token:     token,
+		User:      *user,
+		ExpiresAt: time.Now().Add(time.Hour * 24),
+	}, nil
 }

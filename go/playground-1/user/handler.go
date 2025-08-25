@@ -118,8 +118,35 @@ func (h *Handler) DeleteUserHandler(c *gin.Context) {
 	})
 }
 
+// 로그인
+func (h *Handler) LoginHandler(c *gin.Context) {
+	var req LoginRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid request format",
+		})
+		return
+	}
+
+	response, err := h.service.Login(req)
+	
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to login",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Login successful",
+		"data":    response,
+	})
+}
+
 func (h *Handler) SetupRoutes(router *gin.Engine) {
 	router.POST("/sign-up", h.SignUpHandler)
+	router.POST("/login", h.LoginHandler)
 	router.GET("/user/:id", h.GetUserHandler)
 	router.PATCH("/user/:id", h.UpdateUserHandler)
 	router.DELETE("/user/:id", h.DeleteUserHandler)

@@ -53,3 +53,14 @@ type DeleteUserRequest struct {
 type DeleteUserResponse struct {
 	ID string `json:"id"`
 }
+
+type LoginRequest struct {
+	Email string `json:"email"`
+	Password string `json:"password"`
+}
+
+type LoginResponse struct {
+	Token string `json:"token"`
+	User UserResponse `json:"user,omitempty"`
+	ExpiresAt time.Time `json:"expires_at"`
+}
